@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TensiKu – Kontrol Hipertensi</title>
+<meta name="description" content="Aplikasi pemantauan tekanan darah mandiri (HBPM) untuk pasien hipertensi, berbasis PNPK Hipertensi Dewasa 2026 dan pedoman internasional.">
+<style>
+:root{
+  --bg:#f4f7f8; --surface:#ffffff; --surface-2:#eef3f4; --text:#15262b; --muted:#5b6f75; --line:#d9e3e5;
+  --brand:#0f766e; --brand-2:#115e59; --brand-soft:#d6f0ec; --accent:#c2410c;
+  --ok:#15803d; --ok-soft:#dcfce7; --warn:#b45309; --warn-soft:#fef3c7; --bad:#b91c1c; --bad-soft:#fee2e2;
+  --sys:#dc2626; --dia:#2563eb; --pulse:#7c3aed;
+  --g0:#15803d; --g1:#4d7c0f; --g2:#a16207; --g3:#c2410c; --g4:#b91c1c; --g5:#7f1d1d;
+  --radius:14px; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(15,60,60,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1719; --surface:#152225; --surface-2:#1b2c30; --text:#e3eef0; --muted:#94aab0; --line:#28403f;
+    --brand:#2dd4bf; --brand-2:#5eead4; --brand-soft:#123a37; --accent:#fb923c;
+    --ok:#4ade80; --ok-soft:#14321f; --warn:#fbbf24; --warn-soft:#3a2d0c; --bad:#f87171; --bad-soft:#3b1515;
+    --sys:#f87171; --dia:#60a5fa; --pulse:#a78bfa;
+    --g0:#4ade80; --g1:#a3e635; --g2:#facc15; --g3:#fb923c; --g4:#f87171; --g5:#fca5a5;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1719; --surface:#152225; --surface-2:#1b2c30; --text:#e3eef0; --muted:#94aab0; --line:#28403f;
+  --brand:#2dd4bf; --brand-2:#5eead4; --brand-soft:#123a37; --accent:#fb923c;
+  --ok:#4ade80; --ok-soft:#14321f; --warn:#fbbf24; --warn-soft:#3a2d0c; --bad:#f87171; --bad-soft:#3b1515;
+  --sys:#f87171; --dia:#60a5fa; --pulse:#a78bfa;
+  --g0:#4ade80; --g1:#a3e635; --g2:#facc15; --g3:#fb923c; --g4:#f87171; --g5:#fca5a5;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:84px}
+a{color:var(--brand)}
+h1,h2,h3{line-height:1.25;margin:0 0 .5rem}
+h2{font-size:1.2rem} h3{font-size:1.02rem}
+p{margin:.35rem 0 .7rem}
+small,.muted{color:var(--muted)}
+header.top{background:var(--brand);color:#fff;padding:14px 16px 12px}
+:root[data-theme="dark"] header.top{background:#0b3b37}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) header.top{background:#0b3b37}}
+.top-inner{max-width:980px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.logo{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.18);display:grid;place-items:center;flex:none}
+.top h1{font-size:1.15rem;margin:0;color:#fff}
+.top .sub{font-size:.8rem;opacity:.85}
+.top .spacer{flex:1}
+.icon-btn{background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;font:inherit;font-size:.85rem}
+main{max-width:980px;margin:0 auto;padding:16px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{flex:1;border:0;background:none;color:var(--muted);padding:8px 2px 9px;font:inherit;font-size:.7rem;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;min-width:0}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button.active{color:var(--brand);font-weight:600}
+@media (min-width:760px){
+  body{padding-bottom:24px}
+  nav.tabs{position:sticky;top:0;bottom:auto;border-top:0;border-bottom:1px solid var(--line);justify-content:center}
+  nav.tabs button{flex:0 0 auto;flex-direction:row;font-size:.88rem;padding:12px 14px;gap:6px}
+  nav.tabs button svg{width:18px;height:18px}
+  nav.tabs button.active{box-shadow:inset 0 -3px 0 var(--brand)}
+}
+section.view{display:none}
+section.view.active{display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.grid{display:grid;gap:14px}
+@media (min-width:700px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat .lbl{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.stat .val{font-size:1.9rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat .val small{font-size:.9rem;font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:.8rem;font-weight:600;border:1px solid currentColor}
+.dot{width:9px;height:9px;border-radius:50%;background:currentColor;display:inline-block}
+label{display:block;font-size:.85rem;font-weight:600;margin:0 0 4px}
+input,select,textarea{width:100%;font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:1px}
+.row{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));margin-bottom:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--brand);background:var(--brand);color:#fff;border-radius:10px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer}
+:root[data-theme="dark"] .btn{color:#062b28}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn{color:#062b28}}
+.btn.ghost{background:transparent;color:var(--brand)}
+.btn.danger{background:transparent;border-color:var(--bad);color:var(--bad)}
+.btn.sm{padding:6px 10px;font-size:.82rem}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.alert{border-radius:12px;padding:12px 14px;margin:10px 0;border:1px solid}
+.alert.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--text)}
+.alert.warn{background:var(--warn-soft);border-color:var(--warn)}
+.alert.bad{background:var(--bad-soft);border-color:var(--bad)}
+.alert.info{background:var(--brand-soft);border-color:var(--brand)}
+.alert strong{display:block;margin-bottom:2px}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+td.num{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chart-wrap{position:relative;width:100%;height:280px}
+canvas{display:block;width:100%;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.8rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;color:var(--muted);font:inherit;font-size:.82rem;padding:6px 10px;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--text);font-weight:600;box-shadow:var(--shadow)}
+.check{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.check:last-child{border-bottom:0}
+.check input{width:22px;height:22px;accent-color:var(--brand);flex:none}
+.check .grow{flex:1;min-width:0}
+.bar{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.bar>span{display:block;height:100%;background:var(--brand);border-radius:99px}
+details{border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:10px;box-shadow:var(--shadow)}
+details>summary{cursor:pointer;padding:14px 16px;font-weight:650;list-style:none;display:flex;justify-content:space-between;gap:10px}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"+";color:var(--brand);font-size:1.2rem;line-height:1}
+details[open]>summary::after{content:"–"}
+details .body{padding:0 16px 14px}
+details ul,details ol{padding-left:1.2rem;margin:.3rem 0 .7rem}
+details li{margin:.2rem 0}
+sup.ref a{text-decoration:none;font-size:.72em;font-weight:700;padding:0 1px}
+.reflist{padding-left:1.4rem;font-size:.86rem}
+.reflist li{margin:.45rem 0;word-break:break-word}
+.reflist li:target{background:var(--warn-soft);border-radius:6px}
+.class-table td:first-child{font-weight:600}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal-bg.show{display:flex}
+.modal{background:var(--surface);border-radius:16px;max-width:520px;width:100%;max-height:90vh;overflow:auto;padding:18px;border:2px solid var(--bad)}
+.modal h2{color:var(--bad)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:90vw}
+.toast.show{opacity:1}
+.empty{text-align:center;padding:24px 8px;color:var(--muted)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:.9rem}
+.kv:last-child{border-bottom:0}
+.kv b{font-variant-numeric:tabular-nums}
+.disclaimer{font-size:.8rem;color:var(--muted);text-align:center;padding:10px 6px 20px}
+#report{display:none}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  header.top,nav.tabs,section.view,.toast,.modal-bg,.disclaimer{display:none!important}
+  #report{display:block!important;font-size:11pt;color:#000}
+  #report table{font-size:10pt}
+  #report th,#report td{border-bottom:1px solid #999;color:#000}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/><path d="M3 12h4l2-3 3 6 2-3h4"/></svg>
+    </div>
+    <div>
+      <h1>TensiKu</h1>
+      <div class="sub" id="hello">Pemantauan tekanan darah mandiri untuk pasien hipertensi</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="themeBtn" aria-label="Ganti tema">Tema</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button data-tab="home" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>Beranda</button>
+  <button data-tab="add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Catat TD</button>
+  <button data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg>Riwayat</button>
+  <button data-tab="meds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-45 12 12)"/><path d="M9 9l6 6"/></svg>Obat</button>
+  <button data-tab="life"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/><path d="M9 9h6M12 6v6"/></svg>Gaya Hidup</button>
+  <button data-tab="edu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5V21h16"/></svg>Edukasi</button>
+  <button data-tab="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Profil</button>
+</nav>
+
+<main>
+
+<!-- ============ BERANDA ============ -->
+<section class="view active" id="view-home">
+  <div class="grid g2">
+    <div class="card">
+      <div class="stat">
+        <span class="lbl">Pengukuran terakhir</span>
+        <span class="val" id="lastVal">–</span>
+        <span id="lastMeta" class="muted">Belum ada data</span>
+      </div>
+      <div id="lastClass" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <div class="stat">
+        <span class="lbl">Rata-rata TD rumah 7 hari (HBPM)</span>
+        <span class="val" id="avgVal">–</span>
+        <span id="avgMeta" class="muted">Butuh data minimal 3 hari</span>
+      </div>
+      <div id="avgClass" style="margin-top:8px"></div>
+    </div>
+  </div>
+  <div class="grid g3">
+    <div class="card stat"><span class="lbl">Target TD Anda</span><span class="val" id="tgtVal" style="font-size:1.4rem">–</span><span class="muted" id="tgtMeta"></span></div>
+    <div class="card stat"><span class="lbl">Sesuai target (30 hari)</span><span class="val" id="inTgt" style="font-size:1.4rem">–</span><div class="bar"><span id="inTgtBar" style="width:0"></span></div></div>
+    <div class="card stat"><span class="lbl">Kepatuhan obat (7 hari)</span><span class="val" id="adh" style="font-size:1.4rem">–</span><div class="bar"><span id="adhBar" style="width:0"></span></div></div>
+  </div>
+  <div class="card">
+    <h3>Obat hari ini</h3>
+    <div id="homeMeds"></div>
+  </div>
+  <div class="card">
+    <h3>Pengingat jadwal HBPM</h3>
+    <p class="muted" style="margin-top:0">Ukur pagi dan malam, masing-masing minimal 2 kali dengan jeda 1 menit. Lakukan selama 7 hari sebelum kontrol ke dokter. Hasil hari pertama tidak ikut dihitung.<sup class="ref"><a href="#r1">1</a>,<a href="#r7">7</a></sup></p>
+    <div class="kv"><span>Pagi: 1 jam setelah bangun, sesudah buang air kecil, sebelum sarapan dan sebelum minum obat</span></div>
+    <div class="kv"><span>Malam: sebelum tidur</span></div>
+    <div class="btn-row"><button class="btn" data-go="add">+ Catat tekanan darah</button><button class="btn ghost" id="printBtn">Cetak laporan untuk dokter</button></div>
+  </div>
+</section>
+
+<!-- ============ CATAT ============ -->
+<section class="view" id="view-add">
+  <div class="card">
+    <h2>Catat Tekanan Darah</h2>
+    <div class="alert info"><strong>Sebelum mengukur</strong>Duduk tenang 5 menit dengan punggung bersandar dan kaki menapak lantai tanpa disilangkan. Letakkan lengan di meja setinggi jantung. Jangan bicara selama pengukuran. Hindari kopi, rokok dan olahraga 30 menit sebelumnya, dan kosongkan kandung kemih.<sup class="ref"><a href="#r1">1</a>,<a href="#r7">7</a></sup></div>
+    <form id="bpForm" autocomplete="off">
+      <div class="row">
+        <div><label for="fDate">Tanggal</label><input type="date" id="fDate" required></div>
+        <div><label for="fTime">Jam</label><input type="time" id="fTime" required></div>
+        <div><label for="fPeriod">Sesi</label><select id="fPeriod"><option value="pagi">Pagi</option><option value="malam">Malam</option><option value="lain">Lainnya</option></select></div>
+      </div>
+      <h3 style="margin-top:6px">Pengukuran 1</h3>
+      <div class="row">
+        <div><label for="s1">Sistolik (mmHg)</label><input type="number" id="s1" inputmode="numeric" min="60" max="280" required placeholder="mis. 135"></div>
+        <div><label for="d1">Diastolik (mmHg)</label><input type="number" id="d1" inputmode="numeric" min="30" max="180" required placeholder="mis. 85"></div>
+        <div><label for="p1">Nadi (x/menit)</label><input type="number" id="p1" inputmode="numeric" min="30" max="220" placeholder="opsional"></div>
+      </div>
+      <h3>Pengukuran 2 <small>(1 menit kemudian, dianjurkan)</small></h3>
+      <div class="row">
+        <div><label for="s2">Sistolik</label><input type="number" id="s2" inputmode="numeric" min="60" max="280"></div>
+        <div><label for="d2">Diastolik</label><input type="number" id="d2" inputmode="numeric" min="30" max="180"></div>
+        <div><label for="p2">Nadi</label><input type="number" id="p2" inputmode="numeric" min="30" max="220"></div>
+      </div>
+      <div class="row">
+        <div><label for="fArm">Lengan</label><select id="fArm"><option value="kiri">Kiri</option><option value="kanan">Kanan</option></select></div>
+        <div><label for="fMed">Sudah minum obat?</label><select id="fMed"><option value="belum">Belum</option><option value="sudah">Sudah</option><option value="-">Tidak minum obat TD</option></select></div>
+      </div>
+      <div style="margin-bottom:10px"><label for="fSym">Keluhan saat ini (opsional)</label>
+        <select id="fSym"><option value="">Tidak ada keluhan</option><option>Pusing / sakit kepala ringan</option><option>Sakit kepala hebat</option><option>Nyeri dada</option><option>Sesak napas</option><option>Pandangan kabur</option><option>Lemah / kesemutan sesisi tubuh</option><option>Bicara pelo / bingung</option><option>Lemas / mau pingsan</option></select></div>
+      <div style="margin-bottom:12px"><label for="fNote">Catatan</label><textarea id="fNote" rows="2" placeholder="mis. kurang tidur, habis makan asin, stres"></textarea></div>
+      <button class="btn" type="submit" style="width:100%">Simpan hasil</button>
+    </form>
+    <div id="addResult"></div>
+  </div>
+</section>
+
+<!-- ============ RIWAYAT ============ -->
+<section class="view" id="view-history">
+  <div class="card">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px">
+      <h2 style="margin:0">Grafik Tekanan Darah</h2>
+      <div class="seg" id="rangeSeg"><button data-r="7">7 hari</button><button data-r="30" class="on">30 hari</button><button data-r="90">90 hari</button><button data-r="0">Semua</button></div>
+    </div>
+    <div class="chart-wrap"><canvas id="chart" aria-label="Grafik tekanan darah"></canvas></div>
+    <div class="legend"><span><i style="background:var(--sys)"></i>Sistolik</span><span><i style="background:var(--dia)"></i>Diastolik</span><span><i style="background:var(--muted)"></i>Garis putus-putus = batas atas target</span></div>
+  </div>
+  <div class="card">
+    <h3>Ringkasan periode</h3>
+    <div id="summary"></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">Daftar pengukuran</h3>
+      <div class="btn-row" style="margin:0"><button class="btn ghost sm" id="csvBtn">Unduh CSV</button></div></div>
+    <div class="table-wrap"><table><thead><tr><th>Waktu</th><th>TD</th><th>Nadi</th><th>Kategori</th><th></th></tr></thead><tbody id="histBody"></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============ OBAT ============ -->
+<section class="view" id="view-meds">
+  <div class="card">
+    <h2>Obat Hari Ini</h2>
+    <div id="todayMeds"></div>
+  </div>
+  <div class="card">
+    <h3>Tambah obat dari dokter</h3>
+    <form id="medForm" autocomplete="off">
+      <div class="row">
+        <div><label for="mName">Nama obat</label><input id="mName" required placeholder="mis. Amlodipin"></div>
+        <div><label for="mDose">Dosis</label><input id="mDose" placeholder="mis. 5 mg"></div>
+      </div>
+      <div class="row">
+        <div><label for="mTimes">Jam minum (pisahkan koma)</label><input id="mTimes" required placeholder="mis. 07:00 atau 07:00, 19:00"></div>
+        <div><label for="mNote">Catatan</label><input id="mNote" placeholder="mis. sesudah makan"></div>
+      </div>
+      <button class="btn" type="submit">Tambah obat</button>
+    </form>
+    <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Obat</th><th>Dosis</th><th>Jam</th><th></th></tr></thead><tbody id="medList"></tbody></table></div>
+  </div>
+  <div class="alert warn"><strong>Penting</strong>Jangan menghentikan atau mengubah dosis obat sendiri meskipun tekanan darah sudah normal. Konsultasikan dulu ke dokter. Hipertensi umumnya butuh terapi jangka panjang, dan menghentikan beta-bloker atau klonidin secara mendadak bisa berbahaya.<sup class="ref"><a href="#r1">1</a></sup></div>
+</section>
+
+<!-- ============ GAYA HIDUP ============ -->
+<section class="view" id="view-life">
+  <div class="card">
+    <h2>Catatan Gaya Hidup Harian</h2>
+    <form id="lifeForm" autocomplete="off">
+      <div class="row">
+        <div><label for="lDate">Tanggal</label><input type="date" id="lDate" required></div>
+        <div><label for="lWeight">Berat badan (kg)</label><input type="number" step="0.1" id="lWeight" inputmode="decimal" placeholder="opsional"></div>
+      </div>
+      <div class="row">
+        <div><label for="lSalt">Garam dapur (sendok teh)</label><input type="number" step="0.25" min="0" id="lSalt" inputmode="decimal" placeholder="target ≤ 1"></div>
+        <div><label for="lEx">Olahraga (menit)</label><input type="number" min="0" id="lEx" inputmode="numeric" placeholder="target 30–60"></div>
+        <div><label for="lVeg">Sayur + buah (porsi)</label><input type="number" min="0" id="lVeg" inputmode="numeric" placeholder="target 8–10"></div>
+        <div><label for="lSmoke">Rokok (batang)</label><input type="number" min="0" id="lSmoke" inputmode="numeric" placeholder="target 0"></div>
+      </div>
+      <button class="btn" type="submit">Simpan catatan</button>
+    </form>
+    <div id="lifeFeedback"></div>
+  </div>
+  <div class="card">
+    <h3>Ringkasan 7 hari terakhir</h3>
+    <div id="lifeSummary"></div>
+  </div>
+  <div class="card">
+    <h3>Target gaya hidup (PNPK 2026)</h3>
+    <div class="kv"><span>Natrium ≤ 2 g/hari, setara ±1 sendok teh garam dapur</span><b>≤ 1 sdt</b></div>
+    <div class="kv"><span>Olahraga aerobik intensitas sedang, 5–7×/minggu</span><b>30–60 mnt</b></div>
+    <div class="kv"><span>IMT ideal (Asia)</span><b>18,5–22,9</b></div>
+    <div class="kv"><span>Lingkar pinggang</span><b>&lt;90 cm (L) / &lt;80 cm (P)</b></div>
+    <div class="kv"><span>Merokok</span><b>Berhenti</b></div>
+    <p class="muted" style="margin-bottom:0">Sumber: PNPK Hipertensi Dewasa 2026<sup class="ref"><a href="#r1">1</a></sup>, ESC 2024<sup class="ref"><a href="#r3">3</a></sup>.</p>
+  </div>
+</section>
+
+<!-- ============ EDUKASI ============ -->
+<section class="view" id="view-edu">
+  <div class="card">
+    <h2>Edukasi Hipertensi Berbasis Bukti</h2>
+    <p class="muted" style="margin:0">Isi edukasi mengacu pada PNPK Hipertensi Dewasa (KMK HK.01.07/MENKES/303/2026) dan pedoman internasional. Angka kecil di tiap kalimat menautkan ke daftar pustaka di bagian bawah.</p>
+  </div>
+
+  <details open>
+    <summary>1. Apa itu hipertensi dan bagaimana klasifikasinya?</summary>
+    <div class="body">
+      <p>Hipertensi adalah tekanan darah sistolik ≥140 mmHg dan/atau diastolik ≥90 mmHg pada pengukuran di klinik.<sup class="ref"><a href="#r1">1</a></sup> Prevalensinya pada orang dewasa Indonesia menurut SKI 2023 sebesar 30,8%.<sup class="ref"><a href="#r1">1</a></sup> Hipertensi sering tanpa gejala, sehingga hanya bisa diketahui dengan pengukuran rutin.</p>
+      <div class="table-wrap"><table class="class-table">
+        <thead><tr><th>Kategori (TD klinik)</th><th>Sistolik</th><th></th><th>Diastolik</th></tr></thead>
+        <tbody>
+          <tr><td><span class="swatch" style="background:var(--g0)"></span>Optimal</td><td>&lt;120</td><td>dan</td><td>&lt;80</td></tr>
+          <tr><td><span class="swatch" style="background:var(--g1)"></span>Normal</td><td>120–129</td><td>dan/atau</td><td>80–84</td></tr>
+          <tr><td><span class="swatch" style="background:var(--g2)"></span>Normal-tinggi</td><td>130–139</td><td>dan/atau</td><td>85–89</td></tr>
+          <tr><td><span class="swatch" style="background:var(--g3)"></span>Hipertensi derajat 1</td><td>140–159</td><td>dan/atau</td><td>90–99</td></tr>
+          <tr><td><span class="swatch" style="background:var(--g4)"></span>Hipertensi derajat 2</td><td>160–179</td><td>dan/atau</td><td>100–109</td></tr>
+          <tr><td><span class="swatch" style="background:var(--g5)"></span>Hipertensi derajat 3</td><td>≥180</td><td>dan/atau</td><td>≥110</td></tr>
+        </tbody></table></div>
+      <p class="muted">Kategori ditentukan oleh nilai yang lebih tinggi antara sistolik dan diastolik. Klasifikasi ini dipakai PNPK 2026, Konsensus PERHI 2021 dan ESH 2023.<sup class="ref"><a href="#r1">1</a>,<a href="#r2">2</a>,<a href="#r4">4</a></sup></p>
+      <p><b>Batas pengukuran di rumah lebih rendah.</b> Rerata TD rumah (HBPM) ≥135/85 mmHg sudah termasuk hipertensi, karena TD di rumah umumnya lebih rendah dari TD di klinik.<sup class="ref"><a href="#r1">1</a>,<a href="#r6">6</a>,<a href="#r7">7</a></sup></p>
+    </div>
+  </details>
+
+  <details>
+    <summary>2. Mengapa perlu mengukur tekanan darah di rumah?</summary>
+    <div class="body">
+      <p>Pengukuran mandiri di rumah (HBPM) direkomendasikan untuk memantau efek terapi, menilai kepatuhan, mendeteksi efek samping, dan mengenali <i>white coat hypertension</i> (TD tinggi hanya di klinik) maupun <i>masked hypertension</i> (TD normal di klinik tetapi tinggi di luar klinik).<sup class="ref"><a href="#r1">1</a>,<a href="#r7">7</a></sup></p>
+      <p>Pedoman AHA/ACC 2025 juga menganjurkan pemantauan TD di rumah sebagai bagian dari tata laksana jangka panjang.<sup class="ref"><a href="#r5">5</a></sup></p>
+    </div>
+  </details>
+
+  <details>
+    <summary>3. Cara mengukur tekanan darah yang benar</summary>
+    <div class="body">
+      <ol>
+        <li>Gunakan tensimeter digital lengan atas yang sudah tervalidasi. Kalibrasi setiap 6–12 bulan.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li>Pilih ukuran manset yang sesuai lingkar lengan. Untuk lengan lebih dari 32 cm, pakai manset besar.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li>Duduk bersandar, kaki menapak lantai tanpa disilangkan, lengan di atas meja dengan manset setinggi jantung.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li>Istirahat ±5 menit sebelum mengukur. Jangan bicara selama pengukuran.<sup class="ref"><a href="#r1">1</a>,<a href="#r7">7</a></sup></li>
+        <li>Hindari kopi, rokok dan olahraga 30 menit sebelumnya. Kosongkan kandung kemih. Hindari obat flu yang mengandung fenilefrin/pseudoefedrin.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li>Pagi: 1 jam setelah bangun, sesudah buang air kecil, sebelum sarapan dan sebelum minum obat. Malam: sebelum tidur.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li>Ukur minimal 2 kali dengan jeda 1 menit, lalu ambil reratanya. Lakukan minimal 3 hari (dianjurkan 7 hari). Hasil hari pertama diabaikan.<sup class="ref"><a href="#r1">1</a>,<a href="#r7">7</a></sup></li>
+        <li>Pada kunjungan pertama ukur kedua lengan. Selanjutnya gunakan lengan dengan nilai lebih tinggi.<sup class="ref"><a href="#r1">1</a></sup></li>
+      </ol>
+      <p class="muted">Pada fibrilasi atrium, alat otomatis kurang akurat. Sampaikan hal ini ke dokter Anda.<sup class="ref"><a href="#r1">1</a></sup></p>
+    </div>
+  </details>
+
+  <details>
+    <summary>4. Berapa target tekanan darah saya?</summary>
+    <div class="body">
+      <ul>
+        <li>Target awal untuk semua pasien adalah &lt;140/90 mmHg. Bila dapat ditoleransi, turunkan hingga ≤130/80 mmHg.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li><b>Usia &lt;60 tahun:</b> sistolik 120–129 mmHg.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li><b>Usia ≥60 tahun:</b> sistolik 130–139 mmHg, dengan pemantauan ketat efek samping.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li><b>Diastolik:</b> &lt;80 mmHg untuk semua pasien.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li><b>Usia sangat lanjut, renta (frail) atau multimorbid:</b> sistolik 130–150 mmHg, dengan fokus pada kualitas hidup.<sup class="ref"><a href="#r1">1</a></sup></li>
+      </ul>
+      <p>ESC 2024 menganjurkan sistolik 120–129 mmHg bila dapat ditoleransi.<sup class="ref"><a href="#r3">3</a></sup> AHA/ACC 2025 menganjurkan &lt;130/80 mmHg untuk sebagian besar orang dewasa.<sup class="ref"><a href="#r5">5</a></sup> Uji SPRINT menunjukkan target sistolik &lt;120 mmHg menurunkan kejadian kardiovaskular dan kematian pada pasien risiko tinggi tanpa diabetes, meskipun efek sampingnya lebih banyak.<sup class="ref"><a href="#r13">13</a></sup></p>
+      <p><b>Mengapa penting?</b> Meta-analisis 123 uji klinis menunjukkan setiap penurunan sistolik 10 mmHg menurunkan risiko penyakit kardiovaskular mayor ±20%, stroke ±27%, gagal jantung ±28%, dan kematian total ±13%.<sup class="ref"><a href="#r12">12</a></sup></p>
+      <p class="muted">Target akhir ditetapkan dokter Anda sesuai usia, penyakit penyerta (diabetes, penyakit ginjal, penyakit jantung) dan toleransi. Atur target pribadi di menu Profil.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>5. Perubahan gaya hidup yang terbukti menurunkan TD</summary>
+    <div class="body">
+      <p>Modifikasi gaya hidup adalah dasar terapi pada semua derajat hipertensi dan meningkatkan efektivitas obat.<sup class="ref"><a href="#r1">1</a>,<a href="#r8">8</a></sup> Perkiraan penurunan TD sistolik pada pasien hipertensi:<sup class="ref"><a href="#r16">16</a></sup></p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Intervensi</th><th>Anjuran</th><th>Perkiraan ↓ sistolik</th></tr></thead>
+        <tbody>
+          <tr><td>Pola makan DASH</td><td>Kaya sayur, buah, susu rendah lemak, kacang; rendah lemak jenuh</td><td class="num">±11 mmHg</td></tr>
+          <tr><td>Kurangi natrium</td><td>Na ≤2 g/hari (±1 sdt garam), idealnya ~1,5 g</td><td class="num">±5–6 mmHg</td></tr>
+          <tr><td>Turunkan berat badan</td><td>Menuju IMT 18,5–22,9</td><td class="num">±1 mmHg per kg</td></tr>
+          <tr><td>Olahraga aerobik</td><td>30–60 mnt, 5–7×/minggu, intensitas sedang</td><td class="num">±5–8 mmHg</td></tr>
+          <tr><td>Latihan beban dinamis</td><td>2–3×/minggu sebagai tambahan aerobik</td><td class="num">±4 mmHg</td></tr>
+          <tr><td>Latihan isometrik</td><td>mis. handgrip, 3×/minggu</td><td class="num">±5 mmHg</td></tr>
+          <tr><td>Tambah kalium dari makanan</td><td>Buah dan sayur (kecuali ada penyakit ginjal)</td><td class="num">±4–5 mmHg</td></tr>
+          <tr><td>Kurangi/hindari alkohol</td><td>Sebaiknya tidak minum</td><td class="num">±4 mmHg</td></tr>
+        </tbody></table></div>
+      <ul>
+        <li>Uji DASH: pola makan DASH menurunkan sistolik ±11,4 mmHg pada peserta hipertensi.<sup class="ref"><a href="#r9">9</a></sup> Bila dikombinasikan dengan rendah natrium, efeknya lebih besar.<sup class="ref"><a href="#r10">10</a></sup></li>
+        <li>Natrium juga banyak terdapat di MSG, makanan kaleng/awetan dan daging olahan. Baca label kemasan.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li>Meta-analisis menunjukkan latihan aerobik teratur menurunkan TD ±8,3/5,2 mmHg pada pasien hipertensi.<sup class="ref"><a href="#r1">1</a>,<a href="#r11">11</a></sup></li>
+        <li>Pengganti garam (sebagian kalium) menurunkan stroke dan kejadian kardiovaskular pada uji SSaSS.<sup class="ref"><a href="#r15">15</a></sup> <b>Jangan dipakai</b> bila ada penyakit ginjal atau sedang minum obat penahan kalium, kecuali disetujui dokter.</li>
+        <li>Berhenti merokok tidak langsung menurunkan TD, tetapi sangat menurunkan risiko kardiovaskular secara keseluruhan.<sup class="ref"><a href="#r1">1</a>,<a href="#r3">3</a></sup></li>
+        <li>Pada lansia &gt;80 tahun, pembatasan garam yang terlalu ketat dan penurunan berat badan perlu disesuaikan karena risiko hiponatremia, sarkopenia dan jatuh.<sup class="ref"><a href="#r1">1</a></sup></li>
+      </ul>
+      <p class="muted">Keamanan olahraga: tunda latihan bila TD 160–179/100–109 mmHg tanpa pengawasan dokter. Hentikan latihan bila TD mencapai 200/105 mmHg.<sup class="ref"><a href="#r1">1</a></sup></p>
+    </div>
+  </details>
+
+  <details>
+    <summary>6. Obat antihipertensi: yang perlu pasien ketahui</summary>
+    <div class="body">
+      <ul>
+        <li>Lima golongan utama: ACE-inhibitor (mis. kaptopril, ramipril), ARB (mis. kandesartan, valsartan), penghambat kanal kalsium/CCB (mis. amlodipin), diuretik tiazid (mis. HCT, indapamid), dan beta-bloker.<sup class="ref"><a href="#r1">1</a>,<a href="#r14">14</a></sup></li>
+        <li>Sebagian besar pasien dianjurkan memulai dengan kombinasi dua obat. Kombinasi yang dianjurkan adalah ACEi/ARB dengan CCB atau diuretik, bila mungkin dalam satu tablet (<i>single-pill combination</i>) agar lebih mudah dipatuhi.<sup class="ref"><a href="#r1">1</a>,<a href="#r3">3</a></sup></li>
+        <li>ACE-inhibitor dan ARB <b>tidak boleh</b> diminum bersamaan.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li>Efek samping yang sering: batuk kering (ACEi), bengkak tungkai (CCB dihidropiridin), sering buang air kecil dan gangguan elektrolit (diuretik), lelah dan nadi lambat (beta-bloker). Laporkan ke dokter, jangan berhenti sendiri.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li>ACEi dan ARB tidak boleh dipakai saat hamil. Beri tahu dokter bila merencanakan kehamilan.<sup class="ref"><a href="#r1">1</a></sup></li>
+        <li>Hati-hati obat bebas yang dapat menaikkan TD: obat flu dekongestan (fenilefrin, pseudoefedrin), pereda nyeri golongan OAINS, dan kortikosteroid.<sup class="ref"><a href="#r1">1</a>,<a href="#r3">3</a></sup></li>
+        <li>Evaluasi efek gaya hidup dan obat dilakukan dalam 4–6 minggu.<sup class="ref"><a href="#r1">1</a></sup> Bawa catatan TD rumah dari aplikasi ini saat kontrol.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>7. Tanda bahaya: kapan harus segera ke IGD?</summary>
+    <div class="body">
+      <div class="alert bad"><strong>Segera ke IGD / hubungi 119 bila</strong>TD ≥180/110 mmHg <b>disertai</b> salah satu gejala: nyeri dada, sesak napas, sakit kepala hebat, pandangan kabur, lemah atau kesemutan sesisi tubuh, bicara pelo, kebingungan, kejang atau penurunan kesadaran. Kondisi ini dapat berupa hipertensi emergensi.<sup class="ref"><a href="#r1">1</a></sup></div>
+      <div class="alert warn"><strong>Bila TD ≥180/110 mmHg tanpa gejala</strong>Istirahat 5 menit lalu ukur ulang. Bila tetap tinggi, hubungi dokter atau fasilitas kesehatan pada hari yang sama. Jangan menambah dosis obat sendiri. Penurunan TD yang terlalu cepat juga berbahaya.<sup class="ref"><a href="#r1">1</a>,<a href="#r5">5</a></sup></div>
+      <div class="alert warn"><strong>Ibu hamil</strong>TD &gt;170/110 mmHg adalah kegawatdaruratan dan perlu rawat inap.<sup class="ref"><a href="#r1">1</a></sup></div>
+      <p class="muted">Bila TD sistolik &lt;100 mmHg disertai pusing, lemas atau hampir pingsan (terutama saat berdiri), segera hubungi dokter karena dosis obat mungkin perlu disesuaikan.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>8. Mitos dan fakta</summary>
+    <div class="body">
+      <div class="kv"><span><b>Mitos:</b> "Kalau tidak pusing, tensi pasti normal."</span></div>
+      <p><b>Fakta:</b> Hipertensi sering tanpa gejala. Satu-satunya cara mengetahuinya adalah mengukur.<sup class="ref"><a href="#r1">1</a></sup></p>
+      <div class="kv"><span><b>Mitos:</b> "Kalau tensi sudah normal, obat boleh dihentikan."</span></div>
+      <p><b>Fakta:</b> TD normal sering karena obat bekerja. Penghentian tanpa arahan dokter membuat TD naik kembali. Obat juga tidak dianjurkan dihentikan hanya karena usia lanjut bila masih dapat ditoleransi.<sup class="ref"><a href="#r1">1</a></sup></p>
+      <div class="kv"><span><b>Mitos:</b> "Obat darah tinggi merusak ginjal."</span></div>
+      <p><b>Fakta:</b> Hipertensi yang tidak terkendali justru penyebab utama penyakit ginjal kronik. ACEi/ARB melindungi ginjal; dokter memantau fungsi ginjal secara berkala.<sup class="ref"><a href="#r1">1</a></sup></p>
+    </div>
+  </details>
+
+  <div class="card" id="refs">
+    <h2>Daftar Pustaka</h2>
+    <ol class="reflist">
+      <li id="r1">Kementerian Kesehatan RI. Keputusan Menteri Kesehatan RI Nomor HK.01.07/MENKES/303/2026 tentang Pedoman Nasional Pelayanan Klinis Tata Laksana Hipertensi Dewasa. Jakarta: Kemenkes RI; ditetapkan 17 April 2026. (Mencabut KMK HK.01.07/MENKES/4634/2021.)</li>
+      <li id="r2">Perhimpunan Dokter Hipertensi Indonesia (PERHI). Konsensus Penatalaksanaan Hipertensi 2021: Update Konsensus PERHI 2019. Jakarta: PERHI; 2021.</li>
+      <li id="r3">McEvoy JW, McCarthy CP, Bruno RM, et al. 2024 ESC Guidelines for the management of elevated blood pressure and hypertension. Eur Heart J. 2024;45(38):3912–4018. doi:10.1093/eurheartj/ehae178</li>
+      <li id="r4">Mancia G, Kreutz R, Brunström M, et al. 2023 ESH Guidelines for the management of arterial hypertension. J Hypertens. 2023;41(12):1874–2071. doi:10.1097/HJH.0000000000003480</li>
+      <li id="r5">Jones DW, Ferdinand KC, Taler SJ, et al. 2025 AHA/ACC/AANP/AAPA/ABC/ACCP/ACPM/AGS/AMA/ASPC/NMA/PCNA/SGIM Guideline for the Prevention, Detection, Evaluation and Management of High Blood Pressure in Adults. Hypertension. 2025;82(10):e212–e316. doi:10.1161/HYP.0000000000000249</li>
+      <li id="r6">Williams B, Mancia G, Spiering W, et al. 2018 ESC/ESH Guidelines for the management of arterial hypertension. Eur Heart J. 2018;39(33):3021–3104. doi:10.1093/eurheartj/ehy339</li>
+      <li id="r7">Stergiou GS, Palatini P, Parati G, et al. 2021 European Society of Hypertension practice guidelines for office and out-of-office blood pressure measurement. J Hypertens. 2021;39(7):1293–1302. doi:10.1097/HJH.0000000000002843</li>
+      <li id="r8">Unger T, Borghi C, Charchar F, et al. 2020 International Society of Hypertension Global Hypertension Practice Guidelines. Hypertension. 2020;75(6):1334–1357. doi:10.1161/HYPERTENSIONAHA.120.15026</li>
+      <li id="r9">Appel LJ, Moore TJ, Obarzanek E, et al. A clinical trial of the effects of dietary patterns on blood pressure (DASH). N Engl J Med. 1997;336(16):1117–1124. doi:10.1056/NEJM199704173361601</li>
+      <li id="r10">Sacks FM, Svetkey LP, Vollmer WM, et al. Effects on blood pressure of reduced dietary sodium and the Dietary Approaches to Stop Hypertension (DASH) diet. N Engl J Med. 2001;344(1):3–10. doi:10.1056/NEJM200101043440101</li>
+      <li id="r11">Cornelissen VA, Smart NA. Exercise training for blood pressure: a systematic review and meta-analysis. J Am Heart Assoc. 2013;2(1):e004473. doi:10.1161/JAHA.112.004473</li>
+      <li id="r12">Ettehad D, Emdin CA, Kiran A, et al. Blood pressure lowering for prevention of cardiovascular disease and death: a systematic review and meta-analysis. Lancet. 2016;387(10022):957–967. doi:10.1016/S0140-6736(15)01225-8</li>
+      <li id="r13">SPRINT Research Group. A randomized trial of intensive versus standard blood-pressure control. N Engl J Med. 2015;373(22):2103–2116. doi:10.1056/NEJMoa1511939</li>
+      <li id="r14">World Health Organization. Guideline for the pharmacological treatment of hypertension in adults. Geneva: WHO; 2021.</li>
+      <li id="r15">Neal B, Wu Y, Feng X, et al. Effect of salt substitution on cardiovascular events and death (SSaSS). N Engl J Med. 2021;385(12):1067–1077. doi:10.1056/NEJMoa2105675</li>
+      <li id="r16">Whelton PK, Carey RM, Aronow WS, et al. 2017 ACC/AHA/AAPA/ABC/ACPM/AGS/APhA/ASH/ASPC/NMA/PCNA Guideline for the Prevention, Detection, Evaluation, and Management of High Blood Pressure in Adults. Hypertension. 2018;71(6):e13–e115. doi:10.1161/HYP.0000000000000065</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ PROFIL ============ -->
+<section class="view" id="view-profile">
+  <div class="card">
+    <h2>Profil &amp; Target</h2>
+    <form id="profForm" autocomplete="off">
+      <div class="row">
+        <div><label for="pName">Nama pasien</label><input id="pName" placeholder="Nama"></div>
+        <div><label for="pAge">Usia (tahun)</label><input type="number" id="pAge" min="18" max="120" inputmode="numeric"></div>
+        <div><label for="pSex">Jenis kelamin</label><select id="pSex"><option value="">–</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
+        <div><label for="pHeight">Tinggi badan (cm)</label><input type="number" id="pHeight" min="100" max="230" inputmode="numeric"></div>
+      </div>
+      <div style="margin-bottom:10px"><label for="pTarget">Kelompok target TD</label>
+        <select id="pTarget">
+          <option value="lt60">Usia &lt;60 tahun — sistolik 120–129, diastolik &lt;80</option>
+          <option value="ge60">Usia ≥60 tahun (bugar) — sistolik 130–139, diastolik &lt;80</option>
+          <option value="frail">Lansia sangat tua / renta / multimorbid — sistolik 130–150</option>
+          <option value="custom">Target khusus dari dokter</option>
+        </select>
+      </div>
+      <div class="row" id="customRow" style="display:none">
+        <div><label for="cSys">Batas atas sistolik</label><input type="number" id="cSys" inputmode="numeric" placeholder="mis. 130"></div>
+        <div><label for="cDia">Batas atas diastolik</label><input type="number" id="cDia" inputmode="numeric" placeholder="mis. 80"></div>
+      </div>
+      <div style="margin-bottom:10px"><label for="pDoctor">Dokter / Faskes</label><input id="pDoctor" placeholder="mis. dr. ... / Puskesmas ..."></div>
+      <button class="btn" type="submit">Simpan profil</button>
+    </form>
+    <p class="muted" style="margin-bottom:0">Kelompok target mengikuti PNPK Hipertensi Dewasa 2026.<sup class="ref"><a href="#r1">1</a></sup> Tanyakan target yang tepat untuk Anda kepada dokter, terutama bila ada diabetes, penyakit ginjal atau penyakit jantung.</p>
+  </div>
+  <div class="card">
+    <h3>Data &amp; cadangan</h3>
+    <p class="muted" style="margin-top:0">Semua data hanya tersimpan di peramban (browser) perangkat ini dan tidak dikirim ke mana pun. Buat cadangan secara berkala.</p>
+    <div class="btn-row">
+      <button class="btn ghost" id="backupBtn">Unduh cadangan (JSON)</button>
+      <label class="btn ghost" style="margin:0">Pulihkan cadangan<input type="file" id="restoreInput" accept="application/json" style="display:none"></label>
+      <button class="btn ghost" id="demoBtn">Isi data contoh</button>
+      <button class="btn danger" id="resetBtn">Hapus semua data</button>
+    </div>
+  </div>
+</section>
+
+<div class="disclaimer">TensiKu adalah alat bantu pemantauan dan edukasi, bukan pengganti pemeriksaan maupun keputusan dokter.<br>Ikuti anjuran tenaga kesehatan yang merawat Anda.</div>
+</main>
+
+<div id="report"></div>
+
+<div class="modal-bg" id="crisisModal" role="dialog" aria-modal="true" aria-labelledby="crisisTitle">
+  <div class="modal">
+    <h2 id="crisisTitle">Tekanan darah sangat tinggi</h2>
+    <p id="crisisVal" style="font-size:1.3rem;font-weight:700"></p>
+    <div class="alert bad"><strong>Segera ke IGD / hubungi 119 bila ada:</strong>nyeri dada · sesak napas · sakit kepala hebat · pandangan kabur · lemah/kesemutan sesisi tubuh · bicara pelo · bingung · kejang</div>
+    <div class="alert warn"><strong>Bila tidak ada keluhan di atas:</strong>Duduk tenang 5 menit, lalu ukur ulang. Bila masih ≥180/110 mmHg, hubungi dokter atau fasilitas kesehatan hari ini. Jangan menambah obat sendiri.</div>
+    <p class="muted" style="font-size:.8rem">Sumber: PNPK Hipertensi Dewasa 2026 (KMK HK.01.07/MENKES/303/2026).</p>
+    <div class="btn-row"><button class="btn" id="crisisClose">Saya mengerti</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+const KEY = "tensiku_v1";
+const $ = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const dkey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const todayKey = () => dkey(new Date());
+const BULAN = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+const fmtDate = ts => { const d=new Date(ts); return `${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const fmtShort = ts => { const d=new Date(ts); return `${d.getDate()} ${BULAN[d.getMonth()]}`; };
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+let mem = null;
+function blank(){ return {profile:{name:"",age:"",sex:"",height:"",target:"lt60",cSys:"",cDia:"",doctor:""}, readings:[], meds:[], medLog:{}, life:{}, theme:""}; }
+function load(){
+  try { const raw = localStorage.getItem(KEY); if (raw) { const o = JSON.parse(raw); return Object.assign(blank(), o); } } catch(e) {}
+  return mem || blank();
+}
+function save(){ mem = S; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
+let S = load();
+
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2400); }
+
+/* ---------- Klasifikasi (PNPK 2026 / ESH) ---------- */
+const CATS = [
+  {n:"Optimal", c:"var(--g0)"},
+  {n:"Normal", c:"var(--g1)"},
+  {n:"Normal-tinggi", c:"var(--g2)"},
+  {n:"Hipertensi derajat 1", c:"var(--g3)"},
+  {n:"Hipertensi derajat 2", c:"var(--g4)"},
+  {n:"Hipertensi derajat 3", c:"var(--g5)"}
+];
+function classify(s,d){
+  const is = s<120?0: s<130?1: s<140?2: s<160?3: s<180?4:5;
+  const id = d<80?0: d<85?1: d<90?2: d<100?3: d<110?4:5;
+  const i = Math.max(is,id);
+  return Object.assign({i, isolated: s>=140 && d<90}, CATS[i]);
+}
+function pill(c){ return `<span class="pill" style="color:${c.c}"><span class="dot"></span>${esc(c.n)}</span>`; }
+
+/* ---------- Target ---------- */
+function target(){
+  const p=S.profile;
+  if (p.target==="ge60") return {sys:140, dia:80, low:130, label:"130–139 / <80", note:"Usia ≥60 tahun"};
+  if (p.target==="frail") return {sys:150, dia:90, low:130, label:"130–150 sistolik", note:"Lansia renta / multimorbid"};
+  if (p.target==="custom" && +p.cSys && +p.cDia) return {sys:+p.cSys, dia:+p.cDia, low:null, label:`<${p.cSys}/<${p.cDia}`, note:"Target dari dokter"};
+  return {sys:130, dia:80, low:120, label:"120–129 / <80", note:"Usia <60 tahun"};
+}
+const onTarget = (r,t=target()) => r.s < t.sys && r.d < t.dia;
+
+/* ---------- Navigasi ---------- */
+function go(tab){
+  $$("nav.tabs button").forEach(b=>b.classList.toggle("active", b.dataset.tab===tab));
+  $$("section.view").forEach(v=>v.classList.toggle("active", v.id==="view-"+tab));
+  if (tab==="history") renderHistory();
+  if (tab==="meds") renderMeds();
+  if (tab==="life") renderLife();
+  if (tab==="home") renderHome();
+  if (tab==="profile") fillProfile();
+  window.scrollTo({top:0});
+}
+$$("nav.tabs button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.tab)));
+document.addEventListener("click", e=>{ const g=e.target.closest("[data-go]"); if(g) go(g.dataset.go); });
+
+/* ---------- Tema ---------- */
+function applyTheme(){ if (S.theme) document.documentElement.setAttribute("data-theme", S.theme); else document.documentElement.removeAttribute("data-theme"); }
+$("#themeBtn").addEventListener("click", ()=>{
+  const cur = S.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark":"light");
+  S.theme = cur==="dark" ? "light" : "dark"; save(); applyTheme(); renderHistory();
+});
+
+/* ---------- HBPM 7 hari ---------- */
+function hbpm(){
+  const now = Date.now(), from = now - 7*864e5;
+  let rs = S.readings.filter(r=>r.t>=from).sort((a,b)=>a.t-b.t);
+  const days = [...new Set(rs.map(r=>dkey(new Date(r.t))))];
+  if (days.length < 3) return null;
+  if (days.length >= 4) { const first = days[0]; rs = rs.filter(r=>dkey(new Date(r.t))!==first); }
+  const avg = a => a.length ? {s:Math.round(a.reduce((x,r)=>x+r.s,0)/a.length), d:Math.round(a.reduce((x,r)=>x+r.d,0)/a.length)} : null;
+  return { all:avg(rs), pagi:avg(rs.filter(r=>r.period==="pagi")), malam:avg(rs.filter(r=>r.period==="malam")), n:rs.length, days:days.length };
+}
+
+/* ---------- Beranda ---------- */
+function renderHome(){
+  const p=S.profile, t=target();
+  $("#hello").textContent = p.name ? `Halo, ${p.name}` : "Pemantauan tekanan darah mandiri untuk pasien hipertensi";
+  const rs = [...S.readings].sort((a,b)=>b.t-a.t);
+  if (rs.length){
+    const r=rs[0], c=classify(r.s,r.d);
+    $("#lastVal").innerHTML = `${r.s}/${r.d} <small>mmHg</small>`;
+    $("#lastMeta").textContent = `${fmtDate(r.t)}${r.p?` · nadi ${r.p}x/mnt`:""}`;
+    $("#lastClass").innerHTML = pill(c) + " " + (onTarget(r,t)?`<span class="pill" style="color:var(--ok)">✓ Sesuai target</span>`:`<span class="pill" style="color:var(--warn)">Di atas target</span>`);
+  } else {
+    $("#lastVal").textContent="–"; $("#lastMeta").textContent="Belum ada data"; $("#lastClass").innerHTML=`<button class="btn sm" data-go="add">Catat pengukuran pertama</button>`;
+  }
+  const h=hbpm();
+  if (h && h.all){
+    $("#avgVal").innerHTML = `${h.all.s}/${h.all.d} <small>mmHg</small>`;
+    $("#avgMeta").textContent = `${h.n} catatan dari ${h.days} hari` + (h.pagi?` · pagi ${h.pagi.s}/${h.pagi.d}`:"") + (h.malam?` · malam ${h.malam.s}/${h.malam.d}`:"");
+    const high = h.all.s>=135 || h.all.d>=85;
+    $("#avgClass").innerHTML = high ? `<span class="pill" style="color:var(--warn)">≥135/85: di atas batas normal TD rumah</span>` : `<span class="pill" style="color:var(--ok)">&lt;135/85: dalam batas TD rumah</span>`;
+  } else { $("#avgVal").textContent="–"; $("#avgMeta").textContent="Butuh catatan minimal 3 hari dalam 7 hari terakhir"; $("#avgClass").innerHTML=""; }
+  $("#tgtVal").textContent = t.label; $("#tgtMeta").textContent = t.note;
+  const r30 = S.readings.filter(r=>r.t>=Date.now()-30*864e5);
+  if (r30.length){ const pct=Math.round(100*r30.filter(r=>onTarget(r,t)).length/r30.length); $("#inTgt").textContent=pct+"%"; $("#inTgtBar").style.width=pct+"%"; }
+  else { $("#inTgt").textContent="–"; $("#inTgtBar").style.width="0"; }
+  const a=adherence(7);
+  if (a!==null){ $("#adh").textContent=a+"%"; $("#adhBar").style.width=a+"%"; } else { $("#adh").textContent="–"; $("#adhBar").style.width="0"; }
+  $("#homeMeds").innerHTML = medChecklist();
+}
+
+/* ---------- Catat TD ---------- */
+function resetForm(){
+  const n=new Date();
+  $("#fDate").value=dkey(n); $("#fTime").value=`${pad(n.getHours())}:${pad(n.getMinutes())}`;
+  $("#fPeriod").value = n.getHours()<12 ? "pagi" : (n.getHours()>=17 ? "malam" : "lain");
+  ["s1","d1","p1","s2","d2","p2","fNote"].forEach(id=>$("#"+id).value=""); $("#fSym").value="";
+}
+$("#bpForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const n = id => { const v=$("#"+id).value; return v===""?null:+v; };
+  const s1=n("s1"), d1=n("d1"), s2=n("s2"), d2=n("d2"), p1=n("p1"), p2=n("p2");
+  if (s1<=d1){ toast("Sistolik harus lebih tinggi dari diastolik"); return; }
+  if ((s2===null)!==(d2===null)){ toast("Lengkapi sistolik dan diastolik pengukuran 2"); return; }
+  if (s2!==null && s2<=d2){ toast("Periksa kembali pengukuran 2"); return; }
+  const two = s2!==null;
+  const s = two?Math.round((s1+s2)/2):s1, d = two?Math.round((d1+d2)/2):d1;
+  const ps=[p1,p2].filter(x=>x!==null); const p = ps.length?Math.round(ps.reduce((a,b)=>a+b,0)/ps.length):null;
+  const t = new Date(`${$("#fDate").value}T${$("#fTime").value}`).getTime();
+  const sym=$("#fSym").value;
+  const r = {id:uid(), t, s, d, p, raw: two?[[s1,d1],[s2,d2]]:[[s1,d1]], period:$("#fPeriod").value, arm:$("#fArm").value, med:$("#fMed").value, sym, note:$("#fNote").value.trim()};
+  S.readings.push(r); save();
+  showResult(r, two, Math.abs(s1-(s2??s1))>10);
+  resetForm(); renderHome();
+});
+function showResult(r, two, bigDiff){
+  const c=classify(r.s,r.d), t=target();
+  const danger = ["Sakit kepala hebat","Nyeri dada","Sesak napas","Pandangan kabur","Lemah / kesemutan sesisi tubuh","Bicara pelo / bingung"];
+  let html = `<div class="card" style="margin-top:14px;border-color:${c.c}"><div class="stat"><span class="lbl">${two?"Rerata 2 pengukuran":"Hasil"}</span><span class="val">${r.s}/${r.d} <small>mmHg</small></span></div><div style="margin:6px 0 4px">${pill(c)}</div>`;
+  if (r.s>=180 || r.d>=110){
+    html += `<div class="alert bad"><strong>TD sangat tinggi (derajat 3)</strong>Lihat panduan tindakan yang muncul di layar.</div>`;
+    openCrisis(r);
+  } else if (danger.includes(r.sym)){
+    html += `<div class="alert bad"><strong>Keluhan Anda perlu diperiksa</strong>Keluhan "${esc(r.sym)}" bisa menandakan kondisi serius meskipun TD tidak sangat tinggi. Segera hubungi dokter atau IGD terdekat.</div>`;
+  } else if (r.s<100 && (r.sym==="Lemas / mau pingsan" || r.sym.startsWith("Pusing"))){
+    html += `<div class="alert warn"><strong>TD rendah disertai keluhan</strong>Duduk atau berbaring, minum air, dan hubungi dokter. Dosis obat mungkin perlu disesuaikan.</div>`;
+  } else if (onTarget(r,t)){
+    html += `<div class="alert ok"><strong>Sesuai target Anda (${esc(t.label)})</strong>Pertahankan obat dan gaya hidup sehat.</div>`;
+    if (t.low && r.s < t.low) html += `<p class="muted">Sistolik di bawah rentang target (${t.low}). Bila sering terjadi atau ada pusing saat berdiri, sampaikan ke dokter.</p>`;
+  } else if (c.i>=4){
+    html += `<div class="alert warn"><strong>Di atas target</strong>Bila hasil serupa berulang beberapa hari, konsultasikan ke dokter dalam waktu dekat. Jangan mengubah dosis obat sendiri.</div>`;
+  } else {
+    html += `<div class="alert warn"><strong>Sedikit di atas target (${esc(t.label)})</strong>Satu kali hasil tinggi belum tentu bermakna. Perhatikan rerata beberapa hari dan gaya hidup (garam, tidur, stres, aktivitas).</div>`;
+  }
+  if (c.isolated) html += `<p class="muted">Pola ini termasuk hipertensi sistolik terisolasi (sistolik ≥140, diastolik &lt;90), yang sering pada usia lanjut.</p>`;
+  if (r.p && (r.p<50 || r.p>110)) html += `<p class="muted">Nadi ${r.p}x/menit di luar kisaran biasa. Bila disertai keluhan, sampaikan ke dokter.</p>`;
+  if (bigDiff) html += `<p class="muted">Selisih sistolik kedua pengukuran &gt;10 mmHg. Sebaiknya ukur sekali lagi setelah istirahat.</p>`;
+  if (!two) html += `<p class="muted">Tips: ukur 2 kali dengan jeda 1 menit agar hasil lebih akurat.</p>`;
+  html += `</div>`;
+  $("#addResult").innerHTML = html;
+  $("#addResult").scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+function openCrisis(r){ $("#crisisVal").textContent = `${r.s}/${r.d} mmHg`; $("#crisisModal").classList.add("show"); }
+$("#crisisClose").addEventListener("click", ()=>$("#crisisModal").classList.remove("show"));
+
+/* ---------- Riwayat & Grafik ---------- */
+let range = 30;
+$$("#rangeSeg button").forEach(b=>b.addEventListener("click",()=>{ range=+b.dataset.r; $$("#rangeSeg button").forEach(x=>x.classList.toggle("on",x===b)); renderHistory(); }));
+function inRange(){ const from = range? Date.now()-range*864e5 : 0; return S.readings.filter(r=>r.t>=from).sort((a,b)=>a.t-b.t); }
+function renderHistory(){
+  const rs = inRange(), t=target();
+  drawChart(rs, t);
+  if (!rs.length){ $("#summary").innerHTML=`<div class="empty">Belum ada data pada periode ini.</div>`; }
+  else {
+    const avgS=Math.round(rs.reduce((a,r)=>a+r.s,0)/rs.length), avgD=Math.round(rs.reduce((a,r)=>a+r.d,0)/rs.length);
+    const mx = rs.reduce((a,r)=>r.s>a.s?r:a), mn = rs.reduce((a,r)=>r.s<a.s?r:a);
+    const pct = Math.round(100*rs.filter(r=>onTarget(r,t)).length/rs.length);
+    const pg = rs.filter(r=>r.period==="pagi"), ml = rs.filter(r=>r.period==="malam");
+    const av = a => a.length?`${Math.round(a.reduce((x,r)=>x+r.s,0)/a.length)}/${Math.round(a.reduce((x,r)=>x+r.d,0)/a.length)}`:"–";
+    $("#summary").innerHTML = `
+      <div class="kv"><span>Jumlah catatan</span><b>${rs.length}</b></div>
+      <div class="kv"><span>Rerata keseluruhan</span><b>${avgS}/${avgD} mmHg</b></div>
+      <div class="kv"><span>Rerata pagi / malam</span><b>${av(pg)} · ${av(ml)}</b></div>
+      <div class="kv"><span>Tertinggi</span><b>${mx.s}/${mx.d} (${fmtShort(mx.t)})</b></div>
+      <div class="kv"><span>Terendah</span><b>${mn.s}/${mn.d} (${fmtShort(mn.t)})</b></div>
+      <div class="kv"><span>Sesuai target (${esc(t.label)})</span><b>${pct}%</b></div>`;
+  }
+  const all=[...S.readings].sort((a,b)=>b.t-a.t);
+  $("#histBody").innerHTML = all.length ? all.map(r=>{ const c=classify(r.s,r.d); return `<tr>
+      <td>${fmtDate(r.t)}<br><small>${esc(r.period)} · lengan ${esc(r.arm)}${r.sym?` · ${esc(r.sym)}`:""}${r.note?` · ${esc(r.note)}`:""}</small></td>
+      <td class="num">${r.s}/${r.d}</td><td class="num">${r.p??"–"}</td>
+      <td><span style="color:${c.c};font-weight:600;font-size:.82rem">● ${esc(c.n)}</span></td>
+      <td><button class="btn danger sm" data-del="${r.id}" aria-label="Hapus">✕</button></td></tr>`; }).join("") : `<tr><td colspan="5" class="empty">Belum ada catatan.</td></tr>`;
+}
+document.addEventListener("click", e=>{
+  const b=e.target.closest("[data-del]"); if(!b) return;
+  if (!confirm("Hapus catatan ini?")) return;
+  S.readings=S.readings.filter(r=>r.id!==b.dataset.del); save(); renderHistory(); renderHome();
+});
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function drawChart(rs, t){
+  const cv=$("#chart"), wrap=cv.parentElement, dpr=window.devicePixelRatio||1;
+  const W=wrap.clientWidth, H=wrap.clientHeight; if(!W) return;
+  cv.width=W*dpr; cv.height=H*dpr; const x=cv.getContext("2d"); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,W,H);
+  const L=36,R=10,T=10,B=26, pw=W-L-R, ph=H-T-B;
+  const vals = rs.flatMap(r=>[r.s,r.d]);
+  let lo=Math.min(50,...vals), hi=Math.max(190,...vals); lo=Math.floor(lo/10)*10; hi=Math.ceil(hi/10)*10;
+  const Y=v=>T+ph-(v-lo)/(hi-lo)*ph;
+  x.font="11px system-ui, sans-serif"; x.fillStyle=cssVar("--muted"); x.strokeStyle=cssVar("--line"); x.lineWidth=1;
+  for(let v=lo; v<=hi; v+=20){ x.beginPath(); x.moveTo(L,Y(v)); x.lineTo(W-R,Y(v)); x.stroke(); x.fillText(v,4,Y(v)+4); }
+  // pita krisis
+  x.fillStyle = cssVar("--bad-soft"); x.fillRect(L, T, pw, Math.max(0,Y(180)-T));
+  // target lines
+  x.setLineDash([5,4]); x.strokeStyle=cssVar("--muted"); x.lineWidth=1.2;
+  [t.sys,t.dia].forEach(v=>{ x.beginPath(); x.moveTo(L,Y(v)); x.lineTo(W-R,Y(v)); x.stroke(); });
+  x.setLineDash([]);
+  if (!rs.length){ x.fillStyle=cssVar("--muted"); x.textAlign="center"; x.fillText("Belum ada data", L+pw/2, T+ph/2); x.textAlign="left"; return; }
+  const t0=rs[0].t, t1=rs[rs.length-1].t, span=Math.max(1,t1-t0);
+  const X = rs.length===1 ? ()=>L+pw/2 : r=>L+(r.t-t0)/span*pw;
+  [["s","--sys"],["d","--dia"]].forEach(([k,col])=>{
+    x.strokeStyle=cssVar(col); x.fillStyle=cssVar(col); x.lineWidth=2; x.beginPath();
+    rs.forEach((r,i)=>{ const px=X(r), py=Y(r[k]); i?x.lineTo(px,py):x.moveTo(px,py); }); x.stroke();
+    rs.forEach(r=>{ x.beginPath(); x.arc(X(r),Y(r[k]),rs.length>60?1.8:3,0,Math.PI*2); x.fill(); });
+  });
+  x.fillStyle=cssVar("--muted"); x.textAlign="center";
+  const ticks=Math.min(5,rs.length); for(let i=0;i<ticks;i++){ const r=rs[Math.round(i*(rs.length-1)/Math.max(1,ticks-1))]; x.fillText(fmtShort(r.t), Math.min(W-R-20,Math.max(L+20,X(r))), H-8); }
+  x.textAlign="left";
+}
+let rz; window.addEventListener("resize", ()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if($("#view-history").classList.contains("active")) renderHistory(); },150); });
+
+$("#csvBtn").addEventListener("click", ()=>{
+  const rows=[["tanggal","jam","sesi","sistolik","diastolik","nadi","lengan","sudah_minum_obat","kategori","keluhan","catatan"]];
+  [...S.readings].sort((a,b)=>a.t-b.t).forEach(r=>{ const d=new Date(r.t); rows.push([dkey(d),`${pad(d.getHours())}:${pad(d.getMinutes())}`,r.period,r.s,r.d,r.p??"",r.arm,r.med,classify(r.s,r.d).n,r.sym||"",r.note||""]); });
+  download("tensiku-riwayat.csv", rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n"), "text/csv");
+});
+function download(name, content, type){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["\ufeff"+content],{type})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500); }
+
+/* ---------- Obat ---------- */
+function slots(dateK){ return S.meds.flatMap(m=>m.times.map(tm=>({m,tm,key:`${m.id}@${tm}`, done:!!(S.medLog[dateK]||{})[`${m.id}@${tm}`]}))).sort((a,b)=>a.tm.localeCompare(b.tm)); }
+function medChecklist(){
+  if (!S.meds.length) return `<div class="empty">Belum ada obat. <button class="btn sm ghost" data-go="meds">Tambah obat</button></div>`;
+  const k=todayKey();
+  return slots(k).map(s=>`<label class="check"><input type="checkbox" data-take="${s.key}" ${s.done?"checked":""}><span class="grow"><b>${esc(s.m.name)}</b> ${esc(s.m.dose)}<br><small>${esc(s.tm)}${s.m.note?" · "+esc(s.m.note):""}</small></span></label>`).join("");
+}
+document.addEventListener("change", e=>{
+  const c=e.target.closest("[data-take]"); if(!c) return;
+  const k=todayKey(); S.medLog[k]=S.medLog[k]||{}; if(c.checked) S.medLog[k][c.dataset.take]=Date.now(); else delete S.medLog[k][c.dataset.take];
+  save(); $$(`[data-take="${c.dataset.take}"]`).forEach(x=>x.checked=c.checked); renderHome();
+});
+function adherence(days){
+  if (!S.meds.length) return null; let due=0, done=0;
+  for(let i=0;i<days;i++){ const d=new Date(); d.setDate(d.getDate()-i); const k=dkey(d);
+    S.meds.forEach(m=>{ if (m.created && m.created > new Date(k+"T23:59").getTime()) return; m.times.forEach(tm=>{ due++; if((S.medLog[k]||{})[`${m.id}@${tm}`]) done++; }); }); }
+  return due?Math.round(100*done/due):null;
+}
+function renderMeds(){
+  $("#todayMeds").innerHTML = medChecklist();
+  $("#medList").innerHTML = S.meds.length ? S.meds.map(m=>`<tr><td><b>${esc(m.name)}</b>${m.note?`<br><small>${esc(m.note)}</small>`:""}</td><td>${esc(m.dose)}</td><td>${esc(m.times.join(", "))}</td><td><button class="btn danger sm" data-delmed="${m.id}">✕</button></td></tr>`).join("") : `<tr><td colspan="4" class="empty">Belum ada obat.</td></tr>`;
+}
+$("#medForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const times = $("#mTimes").value.split(/[,;]+/).map(s=>s.trim().replace(".",":")).filter(s=>/^\d{1,2}:\d{2}$/.test(s)).map(s=>s.padStart(5,"0"));
+  if (!times.length){ toast("Format jam: 07:00 atau 07:00, 19:00"); return; }
+  S.meds.push({id:uid(), name:$("#mName").value.trim(), dose:$("#mDose").value.trim(), times, note:$("#mNote").value.trim(), created:Date.now()});
+  save(); e.target.reset(); renderMeds(); toast("Obat ditambahkan");
+});
+document.addEventListener("click", e=>{
+  const b=e.target.closest("[data-delmed]"); if(!b) return;
+  if(!confirm("Hapus obat ini dari daftar?")) return;
+  S.meds=S.meds.filter(m=>m.id!==b.dataset.delmed); save(); renderMeds(); renderHome();
+});
+
+/* ---------- Gaya hidup ---------- */
+function bmi(w){ const h=+S.profile.height; return (w && h) ? w/((h/100)**2) : null; }
+function renderLife(){
+  if (!$("#lDate").value) $("#lDate").value=todayKey();
+  fillLife();
+  const days=[]; for(let i=0;i<7;i++){ const d=new Date(); d.setDate(d.getDate()-i); const k=dkey(d); if(S.life[k]) days.push(S.life[k]); }
+  if (!days.length){ $("#lifeSummary").innerHTML=`<div class="empty">Belum ada catatan gaya hidup minggu ini.</div>`; return; }
+  const num = (k)=>days.map(x=>x[k]).filter(v=>v!==null && v!=="" && v!==undefined).map(Number);
+  const ex=num("ex").reduce((a,b)=>a+b,0), salt=num("salt"), veg=num("veg"), smoke=num("smoke"), w=num("weight");
+  const avg=a=>a.length?(a.reduce((x,y)=>x+y,0)/a.length):null;
+  const exDays = num("ex").filter(v=>v>=30).length;
+  const lastW = w.length? w[0] : null, b=bmi(lastW);
+  $("#lifeSummary").innerHTML = `
+    <div class="kv"><span>Total olahraga (target ≥150 menit/minggu)</span><b style="color:${ex>=150?"var(--ok)":"var(--warn)"}">${ex} menit</b></div>
+    <div class="kv"><span>Hari olahraga ≥30 menit (target 5–7)</span><b>${exDays} hari</b></div>
+    <div class="kv"><span>Rerata garam (target ≤1 sdt)</span><b style="color:${avg(salt)!==null&&avg(salt)<=1?"var(--ok)":"var(--warn)"}">${avg(salt)!==null?avg(salt).toFixed(1)+" sdt":"–"}</b></div>
+    <div class="kv"><span>Rerata sayur + buah (porsi/hari)</span><b>${avg(veg)!==null?avg(veg).toFixed(1):"–"}</b></div>
+    <div class="kv"><span>Total rokok</span><b style="color:${smoke.reduce((a,b)=>a+b,0)===0&&smoke.length?"var(--ok)":"inherit"}">${smoke.length?smoke.reduce((a,b)=>a+b,0)+" batang":"–"}</b></div>
+    <div class="kv"><span>Berat badan terakhir${b?" / IMT":""}</span><b>${lastW?lastW+" kg":"–"}${b?` / ${b.toFixed(1)}`:""}</b></div>
+    ${!S.profile.height?`<p class="muted">Isi tinggi badan di Profil untuk menghitung IMT.</p>`:""}`;
+}
+function fillLife(){ const k=$("#lDate").value, v=S.life[k]||{}; $("#lWeight").value=v.weight??""; $("#lSalt").value=v.salt??""; $("#lEx").value=v.ex??""; $("#lVeg").value=v.veg??""; $("#lSmoke").value=v.smoke??""; }
+$("#lDate").addEventListener("change", fillLife);
+$("#lifeForm").addEventListener("submit", e=>{
+  e.preventDefault(); const k=$("#lDate").value; const g=id=>{const v=$("#"+id).value; return v===""?null:+v;};
+  const v={weight:g("lWeight"), salt:g("lSalt"), ex:g("lEx"), veg:g("lVeg"), smoke:g("lSmoke")}; S.life[k]=v; save();
+  const tips=[];
+  if (v.salt!==null && v.salt>1) tips.push("Garam melebihi 1 sendok teh. Kurangi makanan olahan, kecap/saus asin, dan penyedap.");
+  if (v.ex!==null && v.ex<30) tips.push("Coba tambah aktivitas, misalnya jalan cepat 30 menit.");
+  if (v.smoke) tips.push("Berhenti merokok sangat menurunkan risiko jantung dan stroke. Puskesmas dapat membantu program berhenti merokok.");
+  const b=bmi(v.weight); if (b && b>=23) tips.push(`IMT Anda ${b.toFixed(1)}. Target IMT 18,5–22,9.`);
+  $("#lifeFeedback").innerHTML = tips.length ? `<div class="alert warn"><strong>Saran</strong>${tips.map(esc).join("<br>")}</div>` : `<div class="alert ok"><strong>Bagus!</strong>Catatan hari ini sesuai target.</div>`;
+  renderLife(); toast("Catatan disimpan");
+});
+
+/* ---------- Profil ---------- */
+function fillProfile(){ const p=S.profile; $("#pName").value=p.name; $("#pAge").value=p.age; $("#pSex").value=p.sex; $("#pHeight").value=p.height; $("#pTarget").value=p.target; $("#cSys").value=p.cSys; $("#cDia").value=p.cDia; $("#pDoctor").value=p.doctor; $("#customRow").style.display=p.target==="custom"?"grid":"none"; }
+$("#pTarget").addEventListener("change", ()=>{ $("#customRow").style.display=$("#pTarget").value==="custom"?"grid":"none"; });
+$("#pAge").addEventListener("change", ()=>{ const a=+$("#pAge").value; if($("#pTarget").value!=="custom" && a) $("#pTarget").value = a>=80?"frail": a>=60?"ge60":"lt60"; });
+$("#profForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  S.profile={name:$("#pName").value.trim(), age:$("#pAge").value, sex:$("#pSex").value, height:$("#pHeight").value, target:$("#pTarget").value, cSys:$("#cSys").value, cDia:$("#cDia").value, doctor:$("#pDoctor").value.trim()};
+  if (S.profile.target==="custom" && !(+S.profile.cSys && +S.profile.cDia)){ toast("Isi batas sistolik dan diastolik dari dokter"); return; }
+  save(); renderHome(); toast("Profil disimpan");
+});
+$("#backupBtn").addEventListener("click", ()=>download(`tensiku-cadangan-${todayKey()}.json`, JSON.stringify(S,null,1), "application/json"));
+$("#restoreInput").addEventListener("change", e=>{
+  const f=e.target.files[0]; if(!f) return; const fr=new FileReader();
+  fr.onload=()=>{ try{ const o=JSON.parse(fr.result); if(!Array.isArray(o.readings)) throw 0; S=Object.assign(blank(),o); save(); applyTheme(); fillProfile(); renderHome(); toast("Cadangan dipulihkan"); }catch(err){ toast("File cadangan tidak valid"); } };
+  fr.readAsText(f); e.target.value="";
+});
+$("#resetBtn").addEventListener("click", ()=>{ if(!confirm("Hapus SEMUA data di perangkat ini? Tindakan ini tidak bisa dibatalkan.")) return; S=blank(); save(); applyTheme(); fillProfile(); renderHome(); toast("Semua data dihapus"); });
+$("#demoBtn").addEventListener("click", ()=>{
+  if (S.readings.length && !confirm("Tambahkan data contoh ke data yang ada?")) return;
+  const now=new Date();
+  for(let i=13;i>=0;i--){ ["pagi","malam"].forEach((per,j)=>{ const d=new Date(now); d.setDate(d.getDate()-i); d.setHours(j?21:6, 30+Math.floor(Math.random()*20),0,0); if(d>now) return;
+    const base = 152 - (13-i)*2.1 + (j?-4:3); const s=Math.round(base+ (Math.random()*8-4)), dd=Math.round(s*0.6-3+ (Math.random()*6-3));
+    S.readings.push({id:uid(), t:d.getTime(), s, d:dd, p:68+Math.round(Math.random()*14), raw:[[s,dd]], period:per, arm:"kiri", med:per==="pagi"?"belum":"sudah", sym:"", note:"data contoh"}); }); }
+  if (!S.meds.length) S.meds.push({id:uid(), name:"Amlodipin (contoh)", dose:"5 mg", times:["07:00"], note:"sesuai resep dokter", created:Date.now()-14*864e5});
+  save(); renderHome(); toast("Data contoh ditambahkan");
+});
+
+/* ---------- Laporan cetak ---------- */
+$("#printBtn").addEventListener("click", ()=>{
+  const p=S.profile, t=target(), h=hbpm();
+  const rs = S.readings.filter(r=>r.t>=Date.now()-30*864e5).sort((a,b)=>a.t-b.t);
+  $("#report").innerHTML = `
+    <h2>Laporan Pemantauan Tekanan Darah di Rumah (HBPM)</h2>
+    <p>Nama: <b>${esc(p.name||"-")}</b> · Usia: ${esc(p.age||"-")} · Jenis kelamin: ${esc(p.sex||"-")} · Dokter/Faskes: ${esc(p.doctor||"-")}<br>
+    Dicetak: ${fmtDate(Date.now())} · Target: ${esc(t.label)} (${esc(t.note)})</p>
+    <p><b>Rerata HBPM 7 hari:</b> ${h&&h.all?`${h.all.s}/${h.all.d} mmHg (pagi ${h.pagi?h.pagi.s+"/"+h.pagi.d:"-"}, malam ${h.malam?h.malam.s+"/"+h.malam.d:"-"}; ${h.n} catatan, hari pertama tidak dihitung)`:"data belum cukup"}<br>
+    <b>Kepatuhan obat 7 hari:</b> ${adherence(7)??"-"}%<br>
+    <b>Obat:</b> ${S.meds.length?S.meds.map(m=>esc(`${m.name} ${m.dose} (${m.times.join(", ")})`)).join("; "):"-"}</p>
+    <table><thead><tr><th>Waktu</th><th>Sesi</th><th>TD (mmHg)</th><th>Nadi</th><th>Obat</th><th>Kategori</th><th>Keluhan/Catatan</th></tr></thead><tbody>
+    ${rs.map(r=>`<tr><td>${fmtDate(r.t)}</td><td>${esc(r.period)}</td><td>${r.s}/${r.d}</td><td>${r.p??"-"}</td><td>${esc(r.med)}</td><td>${esc(classify(r.s,r.d).n)}</td><td>${esc([r.sym,r.note].filter(Boolean).join("; "))}</td></tr>`).join("")||`<tr><td colspan="7">Tidak ada data 30 hari terakhir</td></tr>`}
+    </tbody></table>
+    <p style="font-size:9pt">Batas hipertensi pada pengukuran rumah: rerata ≥135/85 mmHg. Klasifikasi per catatan memakai kategori TD klinik (PNPK Hipertensi Dewasa, KMK HK.01.07/MENKES/303/2026).</p>`;
+  window.print();
+});
+
+/* ---------- Init ---------- */
+applyTheme(); resetForm(); fillProfile(); renderHome();
+})();
+</script>
+</body>
+</html>
